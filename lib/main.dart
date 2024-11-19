@@ -158,18 +158,13 @@ class BottomFooterBar extends StatelessWidget {
           ),
           NavIconButton(
             icon: Icons.account_balance,
-            label: 'Accounts',
+            label: 'Account',
             targetRoute: '/account-home',
           ),
           NavIconButton(
             icon: Icons.person,
             label: 'Profile',
             targetRoute: '/profile',
-          ),
-          NavIconButton(
-            icon: Icons.accessibility,
-            label: 'Services',
-            targetRoute: '/services',
           ),
           NavIconButton(
             icon: Icons.settings,

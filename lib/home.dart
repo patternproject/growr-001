@@ -75,6 +75,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   color: Colors.blueAccent,
                 ),
               ),
+              SizedBox(
+                height: 30,
+              ),
+              Image.asset(
+                'assets/images/logo.png', // Ensure your app logo is in the assets folder
+                width: 150,
+                height: 150,
+              ),
             ],
           ),
         ),
