@@ -34,6 +34,12 @@ class _SignInPageState extends State<SignInPage> {
       setState(() {
         isSignedIn = user != null;
       });
+
+      // If the user is already signed in, navigate to the profile page
+      if (user != null) {
+        await createProfileInCaseNoUser(user.email ?? '');  // Ensure profile exists or create it
+        Navigator.pushReplacementNamed(context, '/profile');  // Navigate to the profile page
+      }
     }
   }
 
@@ -64,7 +70,7 @@ class _SignInPageState extends State<SignInPage> {
           });
           await createProfileInCaseNoUser(user.email ?? 'muasif80+test1@gmail.com');
           // Navigate to another screen after successful login
-          Navigator.pushNamed(context, '/profile');
+          Navigator.pushReplacementNamed(context, '/profile');
         } else {
           setState(() {
             isLoading = false;
@@ -102,7 +108,7 @@ class _SignInPageState extends State<SignInPage> {
           });
           await createProfileInCaseNoUser(userCredential.user?.email ?? '');
           // Navigate to the profile screen after successful login
-          Navigator.pushNamed(context, '/profile');
+          Navigator.pushReplacementNamed(context, '/profile');
         } else {
           setState(() {
             isLoading = false;
@@ -190,11 +196,6 @@ class _SignInPageState extends State<SignInPage> {
                           : Text("Sign in with Google"),
                     ),
                   ],
-                ),
-              if (isSignedIn) // Show if the user is signed in
-                ElevatedButton(
-                  onPressed: _signOut,
-                  child: const Text("Sign out"),
                 ),
               if (isLoading) // Show loading indicator while signing in
                 const CircularProgressIndicator(),
