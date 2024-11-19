@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:growr/signin.dart';
 import 'auth_service.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
@@ -57,7 +58,9 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         '/home': (context) =>
-            const MainScaffold(body: MyHomePage(title: 'GROWR - Home')),
+            const MyHomePage(title: 'GROWR - Home'),
+        '/signin': (context) =>
+          const SignInPage(title: 'GROWR - Sign In'),
         // Default route
         '/profile': (context) => const MainScaffold(
               body: ProfilePage(
