@@ -1,0 +1,81 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+
+    id 'com.google.gms.google-services'
+}
+
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:33.6.0')
+    implementation 'com.google.firebase:firebase-analytics'
+
+    // Firebase dependencies with exact versions
+//    implementation 'com.google.firebase:firebase-auth:23.5.0'  // Firebase Authentication
+//    implementation 'com.google.firebase:firebase-firestore:24.4.0'  // Firebase Firestore
+//    implementation 'com.google.firebase:firebase-core:21.1.1'  // Firebase Core
+
+    implementation 'com.google.android.play:integrity:1.4.0'
+}
+
+android {
+    namespace = "com.diginuance.growrr"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
+    ndkVersion = "25.2.9519653" // Make sure NDK is specified
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        applicationId = "com.diginuance.growrr"
+        minSdk = 23
+        targetSdk = 35
+//        versionCode = flutter.versionCode
+//        versionName = flutter.versionName
+
+        // Use command line properties or default values
+        versionCode project.hasProperty("versionCode") ? project.versionCode.toInteger() : 1
+        versionName project.hasProperty("versionName") ? project.versionName : "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            def keystorePropertiesFile = rootProject.file("key.properties")
+            def keystoreProperties = new Properties()
+            if (keystorePropertiesFile.exists()) {
+                keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+            } else {
+                throw new FileNotFoundException("key.properties file not found. Please create it at the project root.")
+            }
+
+            storeFile file(keystoreProperties["storeFile"])
+            storePassword keystoreProperties["storePassword"]
+            keyAlias keystoreProperties["keyAlias"]
+            keyPassword keystoreProperties["keyPassword"]
+        }
+    }
+
+    buildTypes {
+        release {
+            // Ensure these are present
+            ndk {
+                debugSymbolLevel 'FULL'
+            }
+            signingConfig signingConfigs.release
+            minifyEnabled true // Enable code shrinking
+            shrinkResources true // Enable resource shrinking
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}

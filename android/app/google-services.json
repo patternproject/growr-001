@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "555078761697",
+    "project_id": "growr-90b14",
+    "storage_bucket": "growr-90b14.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:555078761697:android:748ec8f9ddb758cf110ba0",
+        "android_client_info": {
+          "package_name": "com.diginuance.growrr"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "555078761697-hoqh85mi2dqaqf4gt5eqigv8013hbdai.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.diginuance.growrr",
+            "certificate_hash": "d0a14ef5ac8a87ef8f76bad3a94c9e05e334a0ba"
+          }
+        },
+        {
+          "client_id": "555078761697-2hksr3vkv1rgedfit0i4a8f9gg364up5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBdCWFtuQYH2gRzqfYDl5OFkfO_nTHFIg8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "555078761697-1jek7uhb3qe89jdr0li76t5ofc5a2aud.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "555078761697-793jc16211voan0cftae3fliirq77eab.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.diginuance.growrr"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
