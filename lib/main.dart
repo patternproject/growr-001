@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:growr/settings.dart';
 import 'package:growr/signin.dart';
 import 'auth_service.dart';
 import 'firebase_options.dart';
@@ -57,10 +58,11 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       routes: {
-        '/home': (context) =>
-            const MyHomePage(title: 'GROWR - Home'),
-        '/signin': (context) =>
-          const SignInPage(title: 'GROWR - Sign In'),
+        '/home': (context) => const MyHomePage(title: 'GROWR - Home'),
+        '/settings': (context) => const MainScaffold(
+              body: SettingsScreen(),
+            ),
+        '/signin': (context) => const SignInPage(title: 'GROWR - Sign In'),
         // Default route
         '/profile': (context) => const MainScaffold(
               body: ProfilePage(
@@ -109,6 +111,7 @@ class MainScaffold extends StatefulWidget {
 
 class _MainScaffoldState extends State<MainScaffold> {
   final AuthService _authService = AuthService();
+
   // bool isLoading = false;
   bool isSignedIn = false;
 
@@ -171,7 +174,7 @@ class BottomFooterBar extends StatelessWidget {
           NavIconButton(
             icon: Icons.settings,
             label: 'Settings',
-            targetRoute: '/profile',
+            targetRoute: '/settings',
           ),
         ],
       ),

@@ -1,7 +1,7 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'auth_service.dart';
 
 class SignInPage extends StatefulWidget {
@@ -15,6 +15,9 @@ class SignInPage extends StatefulWidget {
 
 class _SignInPageState extends State<SignInPage> {
   final AuthService _authService = AuthService();
+  final TextEditingController _emailController = TextEditingController(text: 'asif.diginuance@gmail.com');
+  final TextEditingController _passwordController = TextEditingController(text: 'growr2024');
+
   bool isLoading = false;
   bool isSignedIn = false;
 
@@ -27,105 +30,176 @@ class _SignInPageState extends State<SignInPage> {
   // Check if the user is signed in
   void _checkSignInStatus() async {
     var user = await _authService.getCurrentUser();
-    setState(() {
-      isSignedIn = user != null;
-    });
+    if (mounted) {  // Ensure that the widget is still mounted before calling setState
+      setState(() {
+        isSignedIn = user != null;
+      });
+    }
   }
 
   // Handle Sign-out
   void _signOut() async {
     await _authService.signOut();
-    setState(() {
-      isSignedIn = false;
-    });
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text("Signed out")));
+    if (mounted) {
+      setState(() {
+        isSignedIn = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Signed out")));
+    }
   }
 
   // Handle Google Sign-In
-  void _signIn() async {
+  void _signInWithGoogle() async {
     setState(() {
       isLoading = true;
     });
 
     try {
       var user = await _authService.signInWithGoogle();
-      print(user);
-      if (user != null) {
-        setState(() {
-          isLoading = false;
-          isSignedIn = true;
-        });
-        await createProfileInCaseNoUser(user.email ?? 'muasif80+test1@gmail.com');
-        // Navigate to another screen after successful login
-        Navigator.pushNamed(context, '/home');
-      } else {
-        setState(() {
-
-          isLoading = false;
-        });
-        await createProfileInCaseNoUser('muasif80+test@gmail.com');
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Sign-in failed")));
+      if (mounted) {
+        if (user != null) {
+          setState(() {
+            isLoading = false;
+            isSignedIn = true;
+          });
+          await createProfileInCaseNoUser(user.email ?? 'muasif80+test1@gmail.com');
+          // Navigate to another screen after successful login
+          Navigator.pushNamed(context, '/profile');
+        } else {
+          setState(() {
+            isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Sign-in failed")));
+        }
       }
     } catch (e, stackTrace) {
       print("Error during Google sign-in: $e");
-      print("Stack trace: $stackTrace");
-
-      // If it's a PlatformException, print more details
       if (e is PlatformException) {
         print("PlatformException details:");
         print("Code: ${e.code}");
         print("Message: ${e.message}");
         print("Details: ${e.details}");
       }
-
-      // Additional specific handling for ApiException error
-      // if (e is ApiException) {
-      //   print("API Exception details:");
-      //   print("Error code: ${e.statusCode}");
-      //   print("Message: ${e.message}");
-      // }
-
-      return null;
     }
-
   }
 
-  Future createProfileInCaseNoUser(email) async {
-    FirebaseFirestore.instance.collection('profiles').add({
-
-      'email': email
+  // Handle Email/Password Sign-In
+  void _signInWithEmailPassword() async {
+    setState(() {
+      isLoading = true;
     });
+
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+      if (mounted) {
+        if (userCredential.user != null) {
+          setState(() {
+            isLoading = false;
+            isSignedIn = true;
+          });
+          await createProfileInCaseNoUser(userCredential.user?.email ?? '');
+          // Navigate to the profile screen after successful login
+          Navigator.pushNamed(context, '/profile');
+        } else {
+          setState(() {
+            isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Sign-in failed")));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+      }
+    }
+  }
+
+  // Create profile only if it doesn't already exist
+  Future createProfileInCaseNoUser(String email) async {
+    // Check if a profile with the given email already exists
+    var querySnapshot = await FirebaseFirestore.instance
+        .collection('profiles')
+        .where('email', isEqualTo: email)
+        .get();
+
+    if (querySnapshot.docs.isEmpty) {
+      // If no profile is found, create a new one
+      await FirebaseFirestore.instance.collection('profiles').add({
+        'email': email,
+      });
+      print("Profile created for $email");
+    } else {
+      print("Profile already exists for $email");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme
-            .of(context)
-            .colorScheme
-            .inversePrimary,
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            if (!isSignedIn) // Show this button if the user is not signed in
-              ElevatedButton(
-                onPressed: _signIn,
-                child: const Text("Sign in with Google"),
-              ),
-            if (isSignedIn) // Show this button if the user is signed in
-              ElevatedButton(
-                onPressed: _signOut,
-                child: const Text("Sign out"),
-              ),
-            if (isLoading) // Show loading indicator while signing in
-              const CircularProgressIndicator(),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              if (!isSignedIn) // Show if the user is not signed in
+                Column(
+                  children: [
+                    // Email input field
+                    TextField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    // Password input field
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    // Sign In button for email/password
+                    ElevatedButton(
+                      onPressed: _signInWithEmailPassword,
+                      child: isLoading
+                          ? CircularProgressIndicator()
+                          : Text("Sign In"),
+                    ),
+                    SizedBox(height: 16),
+                    // Sign in with Google button (kept as is)
+                    ElevatedButton(
+                      onPressed: _signInWithGoogle,
+                      child: isLoading
+                          ? CircularProgressIndicator()
+                          : Text("Sign in with Google"),
+                    ),
+                  ],
+                ),
+              if (isSignedIn) // Show if the user is signed in
+                ElevatedButton(
+                  onPressed: _signOut,
+                  child: const Text("Sign out"),
+                ),
+              if (isLoading) // Show loading indicator while signing in
+                const CircularProgressIndicator(),
+            ],
+          ),
         ),
       ),
     );

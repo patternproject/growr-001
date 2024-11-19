@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';  // Add this import for toast functionality
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key, required this.title});
@@ -112,7 +113,22 @@ class _ProfilePageState extends State<ProfilePage> {
         'hours_of_operation': hoursController.text,
       });
 
-      // Show success message
+      // Show success message in a toast
+      Fluttertoast.showToast(
+        msg: "Profile updated successfully!",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 2,
+      );
+
+      // After showing the toast, navigate to the services screen after a brief delay
+      Future.delayed(Duration(seconds: 2), () {
+        if (mounted) {
+          // Navigate to services screen
+          Navigator.pushNamed(context, '/services');
+        }
+      });
+
       setState(() {
         successMessage = 'Profile updated successfully!';
         errorMessage = null;  // Clear previous error messages
@@ -124,6 +140,14 @@ class _ProfilePageState extends State<ProfilePage> {
         errorMessage = 'Error updating profile. Please try again later.';
         successMessage = null;  // Clear previous success messages
       });
+
+      // Show error message in a toast
+      Fluttertoast.showToast(
+        msg: "Error updating profile. Please try again later.",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        timeInSecForIosWeb: 2,
+      );
     }
   }
 
