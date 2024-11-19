@@ -50,7 +50,7 @@ class _MainScaffoldState extends State<MainScaffold> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        //title: Text(widget.title),
         centerTitle: true, // Center the title
         actions: [
           IconButton(

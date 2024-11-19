@@ -183,17 +183,13 @@ class _SignInPageState extends State<SignInPage> {
                     // Sign In button for email/password
                     ElevatedButton(
                       onPressed: _signInWithEmailPassword,
-                      child: isLoading
-                          ? CircularProgressIndicator()
-                          : Text("Sign In"),
+                      child: Text("Sign In"),
                     ),
                     SizedBox(height: 16),
                     // Sign in with Google button (kept as is)
                     ElevatedButton(
                       onPressed: _signInWithGoogle,
-                      child: isLoading
-                          ? CircularProgressIndicator()
-                          : Text("Sign in with Google"),
+                      child: Text("Sign in with Google"),
                     ),
                   ],
                 ),
