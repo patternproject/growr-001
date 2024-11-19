@@ -60,36 +60,43 @@ class MyApp extends StatelessWidget {
       routes: {
         '/home': (context) => const MyHomePage(title: 'GROWR - Home'),
         '/settings': (context) => const MainScaffold(
+          title: 'Settings',
               body: SettingsScreen(),
             ),
         '/signin': (context) => const SignInPage(title: 'GROWR - Sign In'),
         // Default route
         '/profile': (context) => const MainScaffold(
+          title: 'Profile',
               body: ProfilePage(
                 title: 'GROWR - Profile',
               ),
             ),
         '/services': (context) => const MainScaffold(
+          title: 'Services',
               body: ServicesPage(
                 title: 'GROWR - Services',
               ),
             ),
         '/loan-application': (context) => const MainScaffold(
-              body: LoanApplicationPage(
+          title: 'Loan Application',
+          body: LoanApplicationPage(
                 title: 'GROWR - Loan Application',
               ),
             ),
         '/loan-accept': (context) => const MainScaffold(
+          title: 'Loan Accept',
               body: LoanAcceptPage(
                 title: 'GROWR - Loan Accept',
               ),
             ),
         '/account': (context) => const MainScaffold(
+          title: 'Account',
               body: AccountPage(
                 title: 'GROWR - Account',
               ),
             ),
         '/account-home': (context) => const MainScaffold(
+          title: 'Account',
               body: AccountHomePage(
                 title: 'GROWR - Account Home',
               ),
@@ -102,8 +109,9 @@ class MyApp extends StatelessWidget {
 
 class MainScaffold extends StatefulWidget {
   final Widget body;
+  final String title;
 
-  const MainScaffold({super.key, required this.body});
+  const MainScaffold({super.key, required this.body, required this.title});
 
   @override
   State<MainScaffold> createState() => _MainScaffoldState();
@@ -112,7 +120,6 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
   final AuthService _authService = AuthService();
 
-  // bool isLoading = false;
   bool isSignedIn = false;
 
   @override
@@ -129,18 +136,37 @@ class _MainScaffoldState extends State<MainScaffold> {
     });
   }
 
+  // Handle logout and navigate to the sign-in screen
+  void _handleLogout() async {
+    if (isSignedIn) {
+      await _authService.signOut(); // Log out the user
+      setState(() {
+        isSignedIn = false; // Update sign-in status
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Signed out")));
+    }
+    Navigator.pushReplacementNamed(context, '/signin'); // Navigate to SignInPage
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: const Text('GROWR'),
-      //   centerTitle: true, // Center the title
-      // ),
+      appBar: AppBar(
+        title: Text(widget.title),
+        centerTitle: true, // Center the title
+        actions: [
+          IconButton(
+            onPressed: _handleLogout, // Use the logout function
+            icon: Icon(Icons.logout),
+          ),
+        ],
+      ),
       body: widget.body, // Dynamic body content based on route
       bottomNavigationBar: BottomFooterBar(),
     );
   }
 }
+
 
 class BottomFooterBar extends StatelessWidget {
   const BottomFooterBar({super.key});
