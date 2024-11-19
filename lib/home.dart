@@ -1,7 +1,5 @@
-import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'auth_service.dart';
@@ -67,7 +65,6 @@ class _MyHomePageState extends State<MyHomePage> {
           isLoading = false;
         });
         await createProfileInCaseNoUser('muasif80+test@gmail.com');
-        await
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text("Sign-in failed")));
       }

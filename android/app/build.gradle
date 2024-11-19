@@ -63,6 +63,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            signingConfig signingConfigs.release
+        }
         release {
             // Ensure these are present
             ndk {
