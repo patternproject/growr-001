@@ -1,69 +1,96 @@
 import 'package:flutter/material.dart';
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
-  // Function to get app info like version and build number
-  Future<String> _getAppInfo() async {
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    return packageInfo.version + " (" + packageInfo.buildNumber + ")";
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  PackageInfo _packageInfo = PackageInfo(
+    appName: 'Unknown',
+    packageName: 'Unknown',
+    version: 'Unknown',
+    buildNumber: 'Unknown',
+    buildSignature: 'Unknown',
+    installerStore: 'Unknown',
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _initPackageInfo();
   }
 
+  Future<void> _initPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    setState(() {
+      _packageInfo = info;
+    });
+  }
+
+  Widget _infoTile(String title, String subtitle) {
+    return ListTile(
+      title: Text(title),
+      subtitle: Text(subtitle.isEmpty ? 'Not set' : subtitle),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Settings"),
-      ),
+      // appBar: AppBar(
+      //   title: const Text("Settings"),
+      // ),
       body: Center(  // Center everything in the screen
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,  // Center content vertically
-            crossAxisAlignment: CrossAxisAlignment.center,  // Center content horizontally
+            mainAxisAlignment: MainAxisAlignment.start,  // Center content vertically
+            crossAxisAlignment: CrossAxisAlignment.start,  // Center content horizontally
             children: [
               // Application logo
-              Image.asset(
-                'assets/images/logo.png', // Ensure your app logo is in the assets folder
-                width: 150,
-                height: 150,
-              ),
-              const SizedBox(height: 20),
+              // Image.asset(
+              //   'assets/images/logo.png', // Ensure your app logo is in the assets folder
+              //   width: 150,
+              //   height: 150,
+              // ),
+              // const SizedBox(height: 20),
 
               // Application name
-              const Text(
-                "GROWR",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.only(left: 12.0),
+                child: const Text(
+                  "GROWR",
+                  textAlign: TextAlign.left,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const SizedBox(height: 10),
 
-              // Build number and version
-              FutureBuilder<String>(
-                future: _getAppInfo(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircularProgressIndicator();
-                  } else if (snapshot.hasError) {
-                    return const Text("Error fetching app info");
-                  } else {
-                    return Text(
-                      "Version: ${snapshot.data}",
-                      style: const TextStyle(fontSize: 16),
-                    );
-                  }
-                },
+              _infoTile('App name', _packageInfo.appName),
+              _infoTile('Package name', _packageInfo.packageName),
+              _infoTile('App version', _packageInfo.version),
+              _infoTile('Build number', _packageInfo.buildNumber),
+              _infoTile('Build signature', _packageInfo.buildSignature),
+              _infoTile(
+                'Installer store',
+                _packageInfo.installerStore ?? 'not available',
               ),
+              // Build number and version
               const SizedBox(height: 20),
 
               // Copyright message with current year
-              Text(
-                "© ${DateTime.now().year} GROWR. All rights reserved.",
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
+              Center(
+                child: Text(
+                  "© ${DateTime.now().year} GROWR. All rights reserved.",
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                ),
               ),
             ],
           ),

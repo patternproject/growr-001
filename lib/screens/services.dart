@@ -88,20 +88,20 @@ class _ServicesPageState extends State<ServicesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-        actions: <Widget>[
-          IconButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/home');
-            },
-            icon: const Icon(
-              Icons.home,
-            ),
-          ),
-        ],
-      ),
+      // appBar: AppBar(
+      //   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      //   title: Text(widget.title),
+      //   actions: <Widget>[
+      //     IconButton(
+      //       onPressed: () {
+      //         Navigator.pushNamed(context, '/home');
+      //       },
+      //       icon: const Icon(
+      //         Icons.home,
+      //       ),
+      //     ),
+      //   ],
+      // ),
       body: Column(
         children: [
           _buildTableHeader(),

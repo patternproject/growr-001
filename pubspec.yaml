@@ -32,13 +32,10 @@ dependencies:
     sdk: flutter
   fluttertoast: ^8.0.9
   file_picker: ^8.1.4
-#  google_sign_in: ^5.0.7
-#  firebase_auth: ^4.10.0
-#  firebase_core: ^2.20.0
   google_sign_in: ^6.2.2
   firebase_auth: ^5.3.3
   firebase_core: ^3.8.0
-  package_info: ^2.0.0
+
 
 
 
@@ -50,6 +47,7 @@ dependencies:
   firebase_storage: ^12.3.6
   firebase_database: ^11.1.6
   firebase_app_installations: ^0.3.1+6
+  package_info_plus: ^8.1.1
 
 
 dev_dependencies:

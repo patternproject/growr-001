@@ -13,13 +13,13 @@ class _AccountHomePageState extends State<AccountHomePage> {
   @override
   Widget build(BuildContext context) {
     return  Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-        actions: <Widget>[IconButton(onPressed: () {
-          Navigator.pushNamed(context, '/home');
-        }, icon: Icon(Icons.home)),]
-      ),
+      // appBar: AppBar(
+      //   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      //   title: Text(widget.title),
+      //   actions: <Widget>[IconButton(onPressed: () {
+      //     Navigator.pushNamed(context, '/home');
+      //   }, icon: Icon(Icons.home)),]
+      // ),
       body: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.end,

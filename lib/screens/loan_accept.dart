@@ -47,18 +47,18 @@ class _LoanAcceptPageState extends State<LoanAcceptPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-        actions: <Widget>[
-          IconButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/home');
-            },
-            icon: const Icon(Icons.home),
-          ),
-        ],
-      ),
+      // appBar: AppBar(
+      //   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      //   title: Text(widget.title),
+      //   actions: <Widget>[
+      //     IconButton(
+      //       onPressed: () {
+      //         Navigator.pushNamed(context, '/home');
+      //       },
+      //       icon: const Icon(Icons.home),
+      //     ),
+      //   ],
+      // ),
       body: StreamBuilder<QuerySnapshot>(
         stream: approvedLoansStream,
         builder: (context, snapshot) {
