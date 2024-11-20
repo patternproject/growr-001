@@ -105,6 +105,7 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
         content: Text('Loan application revoked successfully!'),
       ));
 
+      Navigator.pushNamed(context, '/account-home');
       // Re-fetch loan applications to update UI
       _fetchLoanApplications();
     } catch (e) {
@@ -142,7 +143,7 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
       'commercial_registration': _commercialRegistrationPath,
       'gosi_registration': _gosiRegistrationPath,
       'application_id': loanApplicationId,
-      'status': 'pending',
+      'status': 'approved',
       'created_at': FieldValue.serverTimestamp(),
     };
 
