@@ -1,6 +1,7 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'auth_service.dart';
 
@@ -15,130 +16,123 @@ class SignInPage extends StatefulWidget {
 
 class _SignInPageState extends State<SignInPage> {
   final AuthService _authService = AuthService();
-  final TextEditingController _emailController = TextEditingController(text: 'asif.diginuance@gmail.com');
-  final TextEditingController _passwordController = TextEditingController(text: 'growr2024');
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
   bool isLoading = false;
   bool isSignedIn = false;
+  String? emailError;
+  String? passwordError;
 
   @override
   void initState() {
     super.initState();
-    _checkSignInStatus(); // Check sign-in status when the app starts
+    _checkSignInStatus();
   }
 
-  // Check if the user is signed in
   void _checkSignInStatus() async {
     var user = await _authService.getCurrentUser();
-    if (mounted) {  // Ensure that the widget is still mounted before calling setState
+    if (mounted) {
       setState(() {
         isSignedIn = user != null;
       });
-
-      // If the user is already signed in, navigate to the profile page
       if (user != null) {
-        await createProfileInCaseNoUser(user.email ?? '');  // Ensure profile exists or create it
-        Navigator.pushReplacementNamed(context, '/profile');  // Navigate to the profile page
+        await _createProfileIfNotExists(user.email ?? '');
+        Navigator.pushReplacementNamed(context, '/profile');
       }
     }
   }
 
-  // Handle Sign-out
-  void _signOut() async {
-    await _authService.signOut();
-    if (mounted) {
+  bool _validateInputs() {
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
+    setState(() {
+      emailError = null;
+      passwordError = null;
+    });
+
+    if (email.isEmpty || !RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").hasMatch(email)) {
       setState(() {
-        isSignedIn = false;
+        emailError = "Enter a valid email address";
       });
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Signed out")));
+      _showToast("Invalid email address");
+      return false;
     }
+
+    if (password.isEmpty || password.length < 6) {
+      setState(() {
+        passwordError = "Password must be at least 6 characters";
+      });
+      _showToast("Invalid password");
+      return false;
+    }
+
+    return true;
   }
 
-  // Handle Google Sign-In
-  void _signInWithGoogle() async {
+  Future<void> _signInWithEmailPassword() async {
+    if (!_validateInputs()) return;
+
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
+
     setState(() {
       isLoading = true;
     });
 
     try {
-      var user = await _authService.signInWithGoogle();
-      if (mounted) {
-        if (user != null) {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+      setState(() {
+        isLoading = false;
+        isSignedIn = true;
+      });
+      await _createProfileIfNotExists(email);
+      Navigator.pushReplacementNamed(context, '/profile');
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+
+      log(e.code);
+
+      if (e.code == 'user-not-found') {
+        // Create a new user if email does not exist
+        try {
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
           setState(() {
             isLoading = false;
             isSignedIn = true;
           });
-          await createProfileInCaseNoUser(user.email ?? 'muasif80+test1@gmail.com');
-          // Navigate to another screen after successful login
+          await _createProfileIfNotExists(email);
           Navigator.pushReplacementNamed(context, '/profile');
-        } else {
-          setState(() {
-            isLoading = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Sign-in failed")));
+        } catch (createError) {
+          _showToast("Error creating new user: ${createError.toString()}");
         }
-      }
-    } catch (e, stackTrace) {
-      print("Error during Google sign-in: $e");
-      if (e is PlatformException) {
-        print("PlatformException details:");
-        print("Code: ${e.code}");
-        print("Message: ${e.message}");
-        print("Details: ${e.details}");
-      }
-    }
-  }
-
-  // Handle Email/Password Sign-In
-  void _signInWithEmailPassword() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-      if (mounted) {
-        if (userCredential.user != null) {
-          setState(() {
-            isLoading = false;
-            isSignedIn = true;
-          });
-          await createProfileInCaseNoUser(userCredential.user?.email ?? '');
-          // Navigate to the profile screen after successful login
-          Navigator.pushReplacementNamed(context, '/profile');
-        } else {
-          setState(() {
-            isLoading = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Sign-in failed")));
-        }
+      } else if (e.code == 'wrong-password') {
+        // Incorrect password
+        _showToast("Password is incorrect");
+      } else {
+        // Other errors
+        _showToast("Sign-in error: ${e.message}");
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
-      }
+      setState(() {
+        isLoading = false;
+      });
+      _showToast("Unexpected error: ${e.toString()}");
     }
   }
 
-  // Create profile only if it doesn't already exist
-  Future createProfileInCaseNoUser(String email) async {
-    // Check if a profile with the given email already exists
-    var querySnapshot = await FirebaseFirestore.instance
-        .collection('profiles')
-        .where('email', isEqualTo: email)
-        .get();
+  void _showToast(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _createProfileIfNotExists(String email) async {
+    var querySnapshot = await FirebaseFirestore.instance.collection('profiles').where('email', isEqualTo: email).get();
 
     if (querySnapshot.docs.isEmpty) {
-      // If no profile is found, create a new one
-      await FirebaseFirestore.instance.collection('profiles').add({
-        'email': email,
-      });
+      await FirebaseFirestore.instance.collection('profiles').add({'email': email});
       print("Profile created for $email");
     } else {
       print("Profile already exists for $email");
@@ -148,82 +142,43 @@ class _SignInPageState extends State<SignInPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      //   title: Text(widget.title),
-      // ),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              if (!isSignedIn) // Show if the user is not signed in
+              if (!isSignedIn)
                 Column(
                   children: [
-                    // Email input field
                     TextField(
                       controller: _emailController,
                       decoration: InputDecoration(
                         labelText: 'Email',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
+                        errorText: emailError,
                       ),
                     ),
-                    SizedBox(height: 16),
-                    // Password input field
+                    const SizedBox(height: 16),
                     TextField(
                       controller: _passwordController,
                       obscureText: true,
                       decoration: InputDecoration(
                         labelText: 'Password',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
+                        errorText: passwordError,
                       ),
                     ),
-                    SizedBox(height: 16),
-                    // Sign In button for email/password
+                    const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: _signInWithEmailPassword,
-                      child: Text("Sign In"),
-                    ),
-                    SizedBox(height: 16),
-                    // Sign in with Google button (kept as is)
-                    ElevatedButton(
-                      onPressed: _signInWithGoogle,
-                      child: Text("Sign in with Google"),
+                      child: const Text("Sign In"),
                     ),
                   ],
                 ),
-              if (isLoading) // Show loading indicator while signing in
-                const CircularProgressIndicator(),
+              if (isLoading) const CircularProgressIndicator(),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class MyButton extends StatelessWidget {
-  final String route;
-  final String title;
-
-  const MyButton({
-    super.key,
-    required this.route,
-    required this.title,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () {
-          Navigator.pushNamed(context, route);
-        },
-        child: Text(
-          title,
-          style: const TextStyle(fontSize: 24),
         ),
       ),
     );
