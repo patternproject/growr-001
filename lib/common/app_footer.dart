@@ -54,6 +54,11 @@ class _BottomFooterBarState extends State<BottomFooterBar> {
               targetRoute: '/profile',
             ),
             const NavIconButton(
+              icon: Icons.man,
+              label: 'services',
+              targetRoute: '/services',
+            ),
+            const NavIconButton(
               icon: Icons.settings,
               label: 'Settings',
               targetRoute: '/settings',

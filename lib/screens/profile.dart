@@ -122,12 +122,12 @@ class _ProfilePageState extends State<ProfilePage> {
       );
 
       // After showing the toast, navigate to the services screen after a brief delay
-      Future.delayed(Duration(seconds: 2), () {
-        if (mounted) {
-          // Navigate to services screen
-          Navigator.pushNamed(context, '/services');
-        }
-      });
+      // Future.delayed(Duration(seconds: 2), () {
+      //   if (mounted) {
+      //     // Navigate to services screen
+      //     Navigator.pushNamed(context, '/services');
+      //   }
+      // });
 
       setState(() {
         successMessage = 'Profile updated successfully!';
