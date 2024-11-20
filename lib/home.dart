@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:growr/signin.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -27,17 +26,11 @@ class _MyHomePageState extends State<MyHomePage> {
         // Navigate to the login screen on tap
         Navigator.pushNamed(
           context,
-          '/signin'
+          '/signin',
         );
       },
       child: Scaffold(
-        // appBar: AppBar(
-        //   backgroundColor: Theme
-        //       .of(context)
-        //       .colorScheme
-        //       .inversePrimary,
-        //   title: Text(widget.title),
-        // ),
+        backgroundColor: const Color(0xFFD3CAF9), // Set the background color here
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -45,43 +38,43 @@ class _MyHomePageState extends State<MyHomePage> {
               Text(
                 'Welcome',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 36,
                   color: Colors.black,
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 30,
               ),
               Text(
                 'to',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 36,
                   color: Colors.black,
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 30,
               ),
               Text(
                 'G R OW R',
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 48,
-                  color: Colors.blueAccent,
+                  color: Color(0xFF7E64ED),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 30,
               ),
               Image.asset(
                 'assets/images/logo.png', // Ensure your app logo is in the assets folder
-                width: 150,
-                height: 150,
+                width: 100,
+                height: 100,
               ),
             ],
           ),

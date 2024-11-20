@@ -1,4 +1,5 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:growr/common/app_header.dart';
 import 'package:growr/settings.dart';
 import 'package:growr/signin.dart';
 import 'auth_service.dart';
@@ -60,54 +61,60 @@ class MyApp extends StatelessWidget {
       ),
       routes: {
         '/home': (context) => const MyHomePage(title: 'GROWR - Home'),
-        '/settings': (context) => const MainScaffold(
-          title: 'Settings',
-              body: SettingsScreen(),
+        '/signin': (context) => MainScaffold(
+              title: 'Sign In',
+              body: SignInPage(title: 'Sign In'),
+              header: getSignInHeader(),
             ),
-        '/signin': (context) => const SignInPage(title: 'GROWR - Sign In'),
         // Default route
         '/profile': (context) => const MainScaffold(
-          title: 'Profile',
+              title: 'Profile',
               body: ProfilePage(
                 title: 'GROWR - Profile',
               ),
             ),
         '/services': (context) => const MainScaffold(
-          title: 'Services',
+              title: 'Services',
               body: ServicesPage(
                 title: 'GROWR - Services',
               ),
             ),
         '/loan-application': (context) => const MainScaffold(
-          title: 'Loan Application',
-          body: LoanApplicationPage(
+              title: 'Loan Application',
+              body: LoanApplicationPage(
                 title: 'GROWR - Loan Application',
               ),
             ),
         '/loan-accept': (context) => const MainScaffold(
-          title: 'Loan Accept',
+              title: 'Loan Accept',
               body: LoanAcceptPage(
                 title: 'GROWR - Loan Accept',
               ),
             ),
         '/account': (context) => const MainScaffold(
-          title: 'Account',
+              title: 'Account',
               body: AccountPage(
                 title: 'GROWR - Account',
               ),
             ),
         '/account-home': (context) => const MainScaffold(
-          title: 'Account',
+              title: 'Account',
               body: AccountHomePage(
                 title: 'GROWR - Account Home',
               ),
+            ),
+        '/settings': (context) => const MainScaffold(
+              title: 'Settings',
+              body: SettingsScreen(),
             ),
       },
       initialRoute: '/home', // Specify the initial route
     );
   }
+
+  getSignInHeader() {
+    return Column(
+        children: [AppHeader()]
+    );
+  }
 }
-
-
-
-

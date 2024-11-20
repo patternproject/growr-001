@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import '../auth_service.dart';
 import 'app_footer.dart';
+import 'app_header.dart';
 
 class MainScaffold extends StatefulWidget {
   final Widget body;
   final String title;
+  final Widget? header;
 
-  const MainScaffold({super.key, required this.body, required this.title});
+  const MainScaffold({super.key, required this.body, required this.title, this.header});
 
   @override
   State<MainScaffold> createState() => _MainScaffoldState();
@@ -61,32 +63,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       ),
       body: Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 16.0),
-                child: Image.asset(
-                  'assets/images/logo.png',
-                  // Ensure your app logo is in the assets folder
-                  width: 60,
-                  height: 60,
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.only(left: 60.0),
-                child: Text(
-                  'GROWR',
-                  style: TextStyle(
-                    fontSize: 48,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFFBAACF6),
-                  ),
-                ),
-              )
-            ],
-          ),
+          widget.header ?? const AppHeader(),
           Expanded(child: widget.body),
         ],
       ), // Dynamic body content based on route
@@ -94,3 +71,5 @@ class _MainScaffoldState extends State<MainScaffold> {
     );
   }
 }
+
+
