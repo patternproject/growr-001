@@ -3,7 +3,9 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'auth_service.dart';
+
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key, required this.title});
@@ -139,6 +141,53 @@ class _SignInPageState extends State<SignInPage> {
     }
   }
 
+
+
+  void _signInWithGoogle() async {
+    try {
+      // Start the Google Sign-In process
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        // The user canceled the Google Sign-In
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In canceled')),
+        );
+        return;
+      }
+
+      // Obtain the Google Sign-In authentication details
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // Create a new credential using the authentication token
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Sign in to Firebase with the Google credential
+      final UserCredential userCredential =
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sign-in successful: ${user.displayName}')),
+        );
+
+        // Navigate to another screen or perform additional actions
+        Navigator.pushReplacementNamed(context, '/profile');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error during Google Sign-In: $e')),
+      );
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -173,10 +222,63 @@ class _SignInPageState extends State<SignInPage> {
                     ElevatedButton(
                       onPressed: _signInWithEmailPassword,
                       child: const Text("Sign In"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        side: BorderSide(color: Colors.grey), // Button border
+                        padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+                        textStyle: TextStyle(fontSize: 16),
+                      ),
                     ),
                   ],
                 ),
               if (isLoading) const CircularProgressIndicator(),
+
+              const SizedBox(height: 30),
+              // Separator Line with "OR"
+              Row(
+                children: [
+                  Expanded(
+                    child: Divider(
+                      thickness: 1,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Text(
+                      "OR",
+                      style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(
+                      thickness: 1,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 30),
+
+// Google Sign-In Button
+              ElevatedButton.icon(
+                onPressed: _signInWithGoogle, // Method for Google Sign-In
+                icon: Icon(Icons.login, color: Colors.red), // Google-colored icon
+                label: Text(
+                  "Sign in with Google",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  side: BorderSide(color: Colors.grey), // Button border
+                  padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+                  textStyle: TextStyle(fontSize: 16),
+                ),
+              ),
+
             ],
           ),
         ),
