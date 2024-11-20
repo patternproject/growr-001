@@ -1,7 +1,10 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+
 
 class LoanApplicationPage extends StatefulWidget {
   const LoanApplicationPage({super.key, required this.title});
@@ -17,30 +20,103 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
   String? _bankStatementPath;
   String? _commercialRegistrationPath;
   String? _gosiRegistrationPath;
-  List<DocumentSnapshot> loanApplications = []; // To hold the fetched loan applications
+  List<DocumentSnapshot> loanApplications = [];
 
-  // Function to generate the next sequence number
-  Future<String> _getNextLoanApplicationId() async {
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
-    DocumentSnapshot snapshot = await firestore.collection('sequence_numbers').doc('loan_application').get();
-
-    int nextSequenceNumber = 1; // Default to 1 if no sequence is found
-    if (snapshot.exists) {
-      nextSequenceNumber = snapshot['last_sequence_number'] + 1;
+  // Function to convert a file to Base64
+  Future<String?> _convertFileToBase64(File file) async {
+    try {
+      List<int> fileBytes = await file.readAsBytes();
+      String base64String = base64Encode(fileBytes);
+      return base64String;
+    } catch (e) {
+      print('Error converting file to Base64: $e');
+      return null;
     }
-
-    // Format as a 6-digit string (e.g., '000001')
-    String formattedId = nextSequenceNumber.toString().padLeft(6, '0');
-
-    // Update the sequence number in Firestore for the next application
-    await firestore.collection('sequence_numbers').doc('loan_application').set({
-      'last_sequence_number': nextSequenceNumber,
-    });
-
-    return formattedId;
   }
 
-  // Function to handle loan application submission
+  // Function to validate file size (must be within 50KB)
+  Future<bool> _validateFileSize(File file) async {
+    int fileSize = await file.length();
+    return fileSize <= 50 * 1024; // 50KB limit
+  }
+
+  // Function to handle file upload
+  Future<void> _pickAndUploadFile(String fileType) async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      File file = File(result.files.single.path!);
+
+      // Check the file size
+      bool isValidSize = await _validateFileSize(file);
+      if (!isValidSize) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('File size exceeds 50KB limit')),
+        );
+        return;
+      }
+
+      // Convert file to Base64
+      String? base64File = await _convertFileToBase64(file);
+      if (base64File != null) {
+        setState(() {
+          if (fileType == 'bank_statement') {
+            _bankStatementPath = base64File;
+          } else if (fileType == 'commercial_registration') {
+            _commercialRegistrationPath = base64File;
+          } else if (fileType == 'gosi_registration') {
+            _gosiRegistrationPath = base64File;
+          }
+        });
+      }
+    }
+  }
+
+  // Function to get the next loan application ID
+  Future<String> _getNextLoanApplicationId() async {
+    // Here, we get the next ID based on Firestore document count
+    try {
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('loan_applications')
+          .orderBy('created_at', descending: true)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        return '1';  // If no applications exist, start with ID 1
+      } else {
+        DocumentSnapshot lastDocument = querySnapshot.docs.first;
+        int lastId = int.tryParse(lastDocument['application_id'] ?? '0') ?? 0;
+        return (lastId + 1).toString();  // Increment the last ID
+      }
+    } catch (e) {
+      print('Error getting next application ID: $e');
+      return '1';  // Default to ID 1 in case of error
+    }
+  }
+
+  // Function to revoke a loan application
+  Future<void> _revokeLoanApplication(String applicationId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('loan_applications')
+          .doc(applicationId)
+          .update({'status': 'revoked'});
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Loan application revoked successfully!'),
+      ));
+
+      // Re-fetch loan applications to update UI
+      _fetchLoanApplications();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error revoking loan application'),
+      ));
+      print('Error revoking loan application: $e');
+    }
+  }
+
+  // Function to submit loan application
   Future<void> _submitLoanApplication() async {
     String? userEmail = FirebaseAuth.instance.currentUser?.email;
 
@@ -54,13 +130,13 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
 
     // Prepare the data to upload
     Map<String, dynamic> loanApplicationData = {
-      'email': userEmail,  // Change field name to 'email'
+      'email': userEmail,
       'loan_amount': _loanAmount,
       'bank_statement': _bankStatementPath,
       'commercial_registration': _commercialRegistrationPath,
       'gosi_registration': _gosiRegistrationPath,
       'application_id': loanApplicationId,
-      'status': 'pending', // Default status is 'pending'
+      'status': 'pending',
       'created_at': FieldValue.serverTimestamp(),
     };
 
@@ -68,10 +144,8 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
       // Save the loan application in Firestore under the 'loan_applications' collection
       await FirebaseFirestore.instance.collection('loan_applications').doc(loanApplicationId).set(loanApplicationData);
 
-      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Loan application submitted successfully!')));
 
-      // Clear the form fields
       setState(() {
         _loanAmount = 1000;
         _bankStatementPath = null;
@@ -79,29 +153,24 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
         _gosiRegistrationPath = null;
       });
 
-      // Refresh the loan applications list
       _fetchLoanApplications();
     } catch (e) {
-      // Handle error
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error submitting loan application')));
       print('Error submitting loan application: $e');
     }
   }
 
-  // Function to fetch all loan applications for the current user
+  // Function to fetch loan applications for the current user
   Future<void> _fetchLoanApplications() async {
     String? userEmail = FirebaseAuth.instance.currentUser?.email;
 
-    if (userEmail == null) {
-      return;
-    }
+    if (userEmail == null) return;
 
     try {
-      // Fetch loan applications from Firestore using the new 'email' field
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('loan_applications')
-          .where('email', isEqualTo: userEmail)  // Change to 'email'
-          .orderBy('created_at', descending: true) // Fetch in reverse chronological order
+          .where('email', isEqualTo: userEmail)
+          .orderBy('created_at', descending: true)
           .get();
 
       setState(() {
@@ -112,48 +181,15 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
     }
   }
 
-  // Function to revoke a loan application
-  Future<void> _revokeLoanApplication(String applicationId) async {
-    try {
-      // Revoke the loan application (set status to 'revoked')
-      await FirebaseFirestore.instance.collection('loan_applications').doc(applicationId).update({
-        'status': 'revoked',
-      });
-
-      // Refresh the loan applications list
-      _fetchLoanApplications();
-
-      // Show success message
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Loan application revoked successfully!')));
-    } catch (e) {
-      print('Error revoking loan application: $e');
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error revoking loan application')));
-    }
-  }
-
   @override
   void initState() {
     super.initState();
-    _fetchLoanApplications(); // Fetch loan applications when the page is loaded
+    _fetchLoanApplications();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      //   title: Text(widget.title),
-      //   actions: <Widget>[
-      //     IconButton(
-      //       onPressed: () {
-      //         Navigator.pushNamed(context, '/home');
-      //       },
-      //       icon: const Icon(
-      //         Icons.home,
-      //       ),
-      //     ),
-      //   ],
-      // ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -183,17 +219,10 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                 title: const Text('Bank Statement'),
                 subtitle: _bankStatementPath == null
                     ? const Text('No document selected')
-                    : Text(_bankStatementPath!),
+                    : const Text('Document selected'),
                 trailing: IconButton(
                   icon: const Icon(Icons.upload_file),
-                  onPressed: () async {
-                    FilePickerResult? result = await FilePicker.platform.pickFiles();
-                    if (result != null) {
-                      setState(() {
-                        _bankStatementPath = result.files.single.path;
-                      });
-                    }
-                  },
+                  onPressed: () => _pickAndUploadFile('bank_statement'),
                 ),
               ),
 
@@ -204,17 +233,10 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                 title: const Text('Commercial Registration'),
                 subtitle: _commercialRegistrationPath == null
                     ? const Text('No document selected')
-                    : Text(_commercialRegistrationPath!),
+                    : const Text('Document selected'),
                 trailing: IconButton(
                   icon: const Icon(Icons.upload_file),
-                  onPressed: () async {
-                    FilePickerResult? result = await FilePicker.platform.pickFiles();
-                    if (result != null) {
-                      setState(() {
-                        _commercialRegistrationPath = result.files.single.path;
-                      });
-                    }
-                  },
+                  onPressed: () => _pickAndUploadFile('commercial_registration'),
                 ),
               ),
 
@@ -225,17 +247,10 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                 title: const Text('GOSI Registration'),
                 subtitle: _gosiRegistrationPath == null
                     ? const Text('No document selected')
-                    : Text(_gosiRegistrationPath!),
+                    : const Text('Document selected'),
                 trailing: IconButton(
                   icon: const Icon(Icons.upload_file),
-                  onPressed: () async {
-                    FilePickerResult? result = await FilePicker.platform.pickFiles();
-                    if (result != null) {
-                      setState(() {
-                        _gosiRegistrationPath = result.files.single.path;
-                      });
-                    }
-                  },
+                  onPressed: () => _pickAndUploadFile('gosi_registration'),
                 ),
               ),
 
@@ -263,27 +278,11 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                       margin: const EdgeInsets.symmetric(vertical: 8),
                       child: ListTile(
                         title: Text('Amount: ${application['loan_amount']} SAR'),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Date: ${application['created_at'].toDate()}'),
-                            Text('Application ID: ${application['application_id']}'),
-                            Text('Status: ${application['status']}'),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                if (application['status'] != 'revoked')
-                                  TextButton(
-                                    onPressed: () {
-                                      _revokeLoanApplication(application.id);
-                                    },
-                                    child: const Text('Revoke'),
-                                  ),
-                              ],
-                            ),
-                          ],
+                        subtitle: Text('Status: ${application['status']}'),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () => _revokeLoanApplication(application.id),
                         ),
-                        isThreeLine: true,
                       ),
                     );
                   },
