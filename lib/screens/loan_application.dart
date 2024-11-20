@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-
 class LoanApplicationPage extends StatefulWidget {
   const LoanApplicationPage({super.key, required this.title});
 
@@ -21,6 +20,7 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
   String? _commercialRegistrationPath;
   String? _gosiRegistrationPath;
   List<DocumentSnapshot> loanApplications = [];
+  bool isSubmitting = false;  // Flag for loading state during submission
 
   // Function to convert a file to Base64
   Future<String?> _convertFileToBase64(File file) async {
@@ -71,26 +71,25 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
     }
   }
 
-  // Function to get the next loan application ID
+  // Function to get the next loan application ID (formatted)
   Future<String> _getNextLoanApplicationId() async {
-    // Here, we get the next ID based on Firestore document count
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('loan_applications')
-          .orderBy('created_at', descending: true)
-          .limit(1)
+      DocumentSnapshot sequenceDoc = await FirebaseFirestore.instance
+          .collection('sequence_numbers')
+          .doc('loan_application')
           .get();
 
-      if (querySnapshot.docs.isEmpty) {
-        return '1';  // If no applications exist, start with ID 1
-      } else {
-        DocumentSnapshot lastDocument = querySnapshot.docs.first;
-        int lastId = int.tryParse(lastDocument['application_id'] ?? '0') ?? 0;
-        return (lastId + 1).toString();  // Increment the last ID
-      }
+      int lastSequenceNumber = (sequenceDoc['last_sequence_number'] ?? 0);
+      String nextId = (lastSequenceNumber + 1).toString().padLeft(6, '0');
+
+      await FirebaseFirestore.instance.collection('sequence_numbers')
+          .doc('loan_application')
+          .update({'last_sequence_number': lastSequenceNumber + 1});
+
+      return nextId;
     } catch (e) {
       print('Error getting next application ID: $e');
-      return '1';  // Default to ID 1 in case of error
+      return '000001';  // Default to ID 000001 in case of error
     }
   }
 
@@ -118,9 +117,16 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
 
   // Function to submit loan application
   Future<void> _submitLoanApplication() async {
+    setState(() {
+      isSubmitting = true;  // Start the loading spinner
+    });
+
     String? userEmail = FirebaseAuth.instance.currentUser?.email;
 
     if (userEmail == null) {
+      setState(() {
+        isSubmitting = false;  // Stop loading spinner
+      });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No user signed in')));
       return;
     }
@@ -141,7 +147,6 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
     };
 
     try {
-      // Save the loan application in Firestore under the 'loan_applications' collection
       await FirebaseFirestore.instance.collection('loan_applications').doc(loanApplicationId).set(loanApplicationData);
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Loan application submitted successfully!')));
@@ -153,32 +158,34 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
         _gosiRegistrationPath = null;
       });
 
+      // Refresh the loan applications list after submission
       _fetchLoanApplications();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error submitting loan application')));
       print('Error submitting loan application: $e');
+    } finally {
+      setState(() {
+        isSubmitting = false;  // Stop the loading spinner
+      });
     }
   }
 
   // Function to fetch loan applications for the current user
-  Future<void> _fetchLoanApplications() async {
+  void _fetchLoanApplications() {
     String? userEmail = FirebaseAuth.instance.currentUser?.email;
 
     if (userEmail == null) return;
 
-    try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection('loan_applications')
-          .where('email', isEqualTo: userEmail)
-          .orderBy('created_at', descending: true)
-          .get();
-
+    FirebaseFirestore.instance
+        .collection('loan_applications')
+        .where('email', isEqualTo: userEmail)
+        .orderBy('created_at', descending: true)
+        .snapshots()
+        .listen((querySnapshot) {
       setState(() {
         loanApplications = querySnapshot.docs;
       });
-    } catch (e) {
-      print('Error fetching loan applications: $e');
-    }
+    });
   }
 
   @override
@@ -259,34 +266,32 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
               // Apply Button
               ElevatedButton(
                 onPressed: _submitLoanApplication,
-                child: const Text('Apply'),
+                child: isSubmitting
+                    ? const CircularProgressIndicator()  // Show spinner while submitting
+                    : const Text('Apply for Loan'),
               ),
 
               const SizedBox(height: 20),
 
               // Loan Applications List
-              const Text('Previous Loan Applications'),
-              SizedBox(
-                height: 300, // Fixed height for the scrollable list
-                child: loanApplications.isEmpty
-                    ? const Center(child: Text('No applications found'))
-                    : ListView.builder(
-                  itemCount: loanApplications.length,
-                  itemBuilder: (context, index) {
-                    var application = loanApplications[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8),
-                      child: ListTile(
-                        title: Text('Amount: ${application['loan_amount']} SAR'),
-                        subtitle: Text('Status: ${application['status']}'),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.delete),
-                          onPressed: () => _revokeLoanApplication(application.id),
-                        ),
+              loanApplications.isEmpty
+                  ? const Center(child: Text('No loan applications found.'))
+                  : ListView.builder(
+                shrinkWrap: true,
+                itemCount: loanApplications.length,
+                itemBuilder: (context, index) {
+                  var application = loanApplications[index];
+                  return Card(
+                    child: ListTile(
+                      title: Text('Application ID: ${application['application_id']}'),
+                      subtitle: Text('Status: ${application['status']}'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () => _revokeLoanApplication(application.id),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                },
               ),
             ],
           ),
