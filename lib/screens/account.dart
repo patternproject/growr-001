@@ -13,14 +13,24 @@ class _AccountPageState extends State<AccountPage> {
 
   // Sample Data for the table
   final List<Map<String, String>> _data = [
-    {'name': 'John Doe', 'date': '2024-11-21', 'credit': '500', 'customer': 'Layla'},
-    {'name': 'Jane Smith', 'date': '2024-11-19', 'credit': '200', 'customer': 'Amy'},
-    {'name': 'Sam Green', 'date': '2024-11-18', 'credit': '300', 'customer': 'Mena'},
+    {'name': 'Haircut', 'date': '2024-11-21', 'credit': '500', 'customer': 'Layla'},
+    {'name': 'Manicure', 'date': '2024-11-19', 'credit': '200', 'customer': 'Amy'},
+    {'name': 'Pedicure', 'date': '2024-11-18', 'credit': '300', 'customer': 'Mena'},
+    {'name': 'Haircut', 'date': '2024-11-17', 'credit': '400', 'customer': 'Layla'},
+    // More rows can be added for testing scrolling functionality
   ];
+
+  bool _selectAll = false;
 
   void _incrementCounter() {
     setState(() {
       _counter++;
+    });
+  }
+
+  void _onSelectAllChanged(bool? value) {
+    setState(() {
+      _selectAll = value!;
     });
   }
 
@@ -42,13 +52,25 @@ class _AccountPageState extends State<AccountPage> {
                   children: [
                     // Outer Circle
                     SizedBox(
-                      width: 120,
-                      height: 120,
+                      width: 180,
+                      height: 180,
                       child: CircularProgressIndicator(
                         value: 0.8, // 80% completion
-                        strokeWidth: 8, // Thickness of the circle
+                        strokeWidth: 12, // Thickness of the circle
                         valueColor: AlwaysStoppedAnimation<Color>(const Color(0xFF7F65ED)),
                         backgroundColor: Colors.white,
+                      ),
+                    ),
+                    // Loan Paid Text
+                    Positioned(
+                      top: 24, // Position above the percentage
+                      child: Text(
+                        'Loan Paid',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
                     // Percentage in the Center
@@ -64,29 +86,86 @@ class _AccountPageState extends State<AccountPage> {
                 ),
                 const SizedBox(height: 20),
                 // GROWR - Credits
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text(
-                      'GROWR - Credits',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF7F65ED), // Background color
+                    borderRadius: BorderRadius.circular(8), // Rounded corners
+                    border: Border.all(
+                      color: Colors.white, // White border
+                      width: 2, // Border thickness
                     ),
-                  ],
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          Center(
+                            child: Text(
+                              'GROWR - Credits',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Total ',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            '6000',
+                            style: const TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            'DUE ',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.normal,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          Text(
+                            '1200',
+                            style: const TextStyle(
+                              fontSize: 36,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text(
-                      'Total: 6000',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    Text(
-                      'DUE: 1200',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
+
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //   children: const [
+                //     Text(
+                //       'Total: 6000',
+                //       style: TextStyle(fontSize: 16),
+                //     ),
+                //     Text(
+                //       'DUE: 1200',
+                //       style: TextStyle(fontSize: 16),
+                //     ),
+                //   ],
+                // ),
               ],
             ),
           ),
@@ -95,23 +174,75 @@ class _AccountPageState extends State<AccountPage> {
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: SingleChildScrollView(
-                child: DataTable(
-                  columns: const [
-                    DataColumn(label: Text('Select')),
-                    DataColumn(label: Text('Name')),
-                    DataColumn(label: Text('Date')),
-                    DataColumn(label: Text('G. Credit')),
-                    DataColumn(label: Text('Customer Name')),
+                child: Column(
+                  children: [
+                    // Table with Scrollable Header and Content
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          headingRowHeight: 50,
+                          columns: [
+                            // Checkbox in the header
+                            DataColumn(
+                              label: Row(
+                                children: [
+                                  Checkbox(
+                                    value: _selectAll,
+                                    onChanged: _onSelectAllChanged,
+                                  ),
+                                  const Text(
+                                    'Select',
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const DataColumn(
+                              label: Text(
+                                'Name',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const DataColumn(
+                              label: Text(
+                                'Date',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const DataColumn(
+                              label: Text(
+                                'G. Credit',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const DataColumn(
+                              label: Text(
+                                'Customer Name',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                          rows: _data.map((data) {
+                            return DataRow(
+                              cells: [
+                                // Checkbox for each row
+                                DataCell(Checkbox(value: false, onChanged: (value) {})),
+                                DataCell(Text(data['name']!)),
+                                DataCell(Text(data['date']!)),
+                                DataCell(Text(data['credit']!)),
+                                DataCell(Text(data['customer']!)),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
                   ],
-                  rows: _data.map((data) {
-                    return DataRow(cells: [
-                      DataCell(Checkbox(value: false, onChanged: (value) {})), // Checkbox
-                      DataCell(Text(data['name']!)),
-                      DataCell(Text(data['date']!)),
-                      DataCell(Text(data['credit']!)),
-                      DataCell(Text(data['customer']!)),
-                    ]);
-                  }).toList(),
                 ),
               ),
             ),
