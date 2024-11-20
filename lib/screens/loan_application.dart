@@ -105,7 +105,7 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
         content: Text('Loan application revoked successfully!'),
       ));
 
-      Navigator.pushNamed(context, '/account-home');
+      // Navigator.pushNamed(context, '/account-home');
       // Re-fetch loan applications to update UI
       _fetchLoanApplications();
     } catch (e) {

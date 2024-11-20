@@ -41,12 +41,12 @@ class _BottomFooterBarState extends State<BottomFooterBar> {
             const NavIconButton(
               icon: Icons.home,
               label: 'Home',
-              targetRoute: '/home',
+              targetRoute: '/account',
             ),
             const NavIconButton(
               icon: Icons.account_balance,
               label: 'Account',
-              targetRoute: '/account-home',
+              targetRoute: '/loan-application',
             ),
             const NavIconButton(
               icon: Icons.person,
