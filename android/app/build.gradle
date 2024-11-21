@@ -4,6 +4,7 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 
     id 'com.google.gms.google-services'
+    id 'com.github.triplet.play' version '3.12.1'
 }
 
 dependencies {
@@ -77,6 +78,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+play {
+    // Overrides defaults
+    track.set("internal")
+    defaultToAppBundles.set(true)
+    serviceAccountCredentials.set(file("C:/Users/asif/diginuance/growr_resources/growr-90b14-4abd769ebe7f.json"))
 }
 
 flutter {

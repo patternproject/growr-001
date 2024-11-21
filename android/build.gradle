@@ -2,11 +2,13 @@ buildscript {
     repositories {
         google() // Make sure this line is included
         mavenCentral()
+//        maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
     }
 
     dependencies {
         // Add this line to include the Google Services classpath
         classpath 'com.google.gms:google-services:4.4.2'  // Use the latest version
+//        classpath 'com.github.triplet.gradle:play-publisher:4.0.0-SNAPSHOT'
     }
 }
 
