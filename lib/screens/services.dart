@@ -160,7 +160,7 @@ class _ServicesPageState extends State<ServicesPage> {
             onChanged: _toggleSelectAll,
           ),
           _headerCell('Name', flex: 4),
-          _headerCell('Duration', flex: 2),
+          _headerCell('Time', flex: 2),
           _headerCell('Price', flex: 2),
           _headerCell(''),
         ],

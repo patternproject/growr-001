@@ -188,10 +188,9 @@ class _AccountPageState extends State<AccountPage> {
                           headingRowHeight: 50,
                           columns: [
                             // Checkbox in the header
-
                             const DataColumn(
                               label: Text(
-                                'Name',
+                                'Customer Name',
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -209,19 +208,21 @@ class _AccountPageState extends State<AccountPage> {
                             ),
                             const DataColumn(
                               label: Text(
-                                'Customer Name',
+                                'Name',
                                 style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
+
                           ],
                           rows: _data.map((data) {
                             return DataRow(
                               cells: [
                                 // Checkbox for each row
-                                DataCell(Text(data['name']!)),
+                                DataCell(Text(data['customer']!)),
+
                                 DataCell(Text(data['date']!)),
                                 DataCell(Text(data['credit']!)),
-                                DataCell(Text(data['customer']!)),
+                                DataCell(Text(data['name']!)),
                               ],
                             );
                           }).toList(),

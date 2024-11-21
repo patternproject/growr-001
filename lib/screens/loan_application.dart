@@ -15,7 +15,7 @@ class LoanApplicationPage extends StatefulWidget {
 }
 
 class _LoanApplicationPageState extends State<LoanApplicationPage> {
-  double _loanAmount = 1000;
+  double _loanAmount = 100000;
   String? _bankStatementPath;
   String? _commercialRegistrationPath;
   String? _gosiRegistrationPath;
@@ -209,12 +209,12 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
               Slider(
                 value: _loanAmount,
                 min: 100,
-                max: 1000,
-                divisions: 100,
-                label: _loanAmount.round().toString(),
+                max: 100000,
+                divisions: 1000,
+                label: _loanAmount.toStringAsFixed(2),
                 onChanged: (value) {
                   setState(() {
-                    _loanAmount = value;
+                    _loanAmount = double.parse(value.toStringAsFixed(2));
                   });
                 },
               ),
