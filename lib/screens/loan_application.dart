@@ -211,10 +211,10 @@ class _LoanApplicationPageState extends State<LoanApplicationPage> {
                 min: 100,
                 max: 100000,
                 divisions: 1000,
-                label: _loanAmount.toStringAsFixed(2),
+                label: _loanAmount.toStringAsFixed(0),
                 onChanged: (value) {
                   setState(() {
-                    _loanAmount = double.parse(value.toStringAsFixed(2));
+                    _loanAmount = double.parse(value.toStringAsFixed(0));
                   });
                 },
               ),
